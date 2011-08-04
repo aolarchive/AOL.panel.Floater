@@ -1,0 +1,13 @@
+== AOL.panel.Floater
+
+A Panel that can stay in one place while the page scrolls. It comes by default with a 'pin' tool in the panel header that lets it be pinned in place. There are some configuration options for the movement animation, such as buffer and duration. Also settings for the floatMargin, which is how far away from the window edge the panel will stay and snapDistance which is how close the panel can get to it's original position before snapping back into place.
+
+Sample usage is fairly straight forward, it is used just like any other panel.
+
+= Sample Usage
+
+	var floatie = new AOL.panel.Floater({
+		renderTo: Ext.getBody(),
+		title: 'Test floatie',
+		html: 'This is the body'
+	});
