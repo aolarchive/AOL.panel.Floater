@@ -28,6 +28,10 @@ AOL.panel.Floater = Ext.extend(Ext.Panel, {
      * @cfg {Number} snapDistance how far away (in pixels) from home should the box be before it snaps back into place
      */
     snapDistance: 50,
+    /**
+     * @cfg {Boolean} preventOverflow prevent the floater panel from moving beyond it's containing element.
+     */
+    preventOverflow: true,
     // private
     initComponent: function(){
         
@@ -45,17 +49,34 @@ AOL.panel.Floater = Ext.extend(Ext.Panel, {
         });
         
         Ext.apply(this, {
-            style: 'position: relative; z-index: 3000;'
+            style: 'position: relative; z-index: 3000;',
+            startPos: [0, 0]
         });
         
         AOL.panel.Floater.superclass.initComponent.call(this);
-                
-        Ext.EventManager.on(window, 'scroll', this.onPageScroll, this, {buffer:this.buffer});
+        
+        if (this.buffer > 0) {
+            Ext.EventManager.on(window, 'scroll', this.onPageScroll, this, {
+                buffer: this.buffer
+            });
+        }else{
+            Ext.EventManager.on(window, 'scroll', this.onPageScroll, this);
+        }
         
     },
     onPageScroll: function(){
         var scrollY = this.scrollObj[this.scrollProp], goingDown = (this.lastY < scrollY) ? false : true;
+        if (!this.startPos[1]){
+            this.startPos = this.getEl().getXY();
+        }
         if (this.el && this.rendered && !this.pinned) {
+            if (this.preventOverflow) {
+                var ctHeight = this.ownerCt.getHeight(), ctTop = this.ownerCt.getPosition()[1], meHeight = this.getHeight();
+                if ((scrollY - ctTop) + meHeight > ctHeight) {
+                    this.el.setY(ctHeight + ctTop - meHeight);
+                    return this;
+                }
+            }
             if (this.top && goingDown && scrollY < this.top + this.snapDistance) {
                 this.el.setY(this.top);
             } else {
@@ -64,12 +85,16 @@ AOL.panel.Floater = Ext.extend(Ext.Panel, {
                     this.el.sequenceFx();
                 }
                 if (scrollY > this.top) {
-                    this.el.shift({
-                        y: scrollY + this.floatMargin,
-                        easing: 'easeNone',
-                        duration: this.duration,
-                        concurrent: false
-                    });
+                    if (this.buffer === 0) {
+                        this.el.dom.style.top = ((scrollY + this.floatMargin) - this.startPos[1]) + 'px'
+                    } else {
+                        this.el.shift({
+                            y: scrollY + this.floatMargin,
+                            easing: 'easeNone',
+                            duration: this.duration,
+                            concurrent: false
+                        });
+                    }
                 }
             }
         }
